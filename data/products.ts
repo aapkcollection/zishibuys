@@ -1,4 +1,4 @@
-export const categories = [
+    export const categories = [
   { name: "Kitchen & Dining", icon: "🍳" },
   { name: "Home Organization", icon: "🗄️" },
   { name: "Cleaning & Laundry", icon: "🧹" },
@@ -14,6 +14,7 @@ export const products = [
   {
     id: 1,
     name: "Multi-Function Kitchen Storage Organizer",
+    description: "A practical kitchen storage organizer that helps keep your space neat and organized.",
     category: "Kitchen & Dining",
     rating: "4.8",
     reviews: "1.2k",
@@ -26,6 +27,7 @@ export const products = [
   {
     id: 2,
     name: "Modern Rechargeable LED Motion Light",
+    description: "A modern rechargeable LED motion light for convenient and energy-efficient home lighting.",
     category: "Lighting",
     rating: "4.7",
     reviews: "842",
@@ -38,6 +40,7 @@ export const products = [
   {
     id: 3,
     name: "Premium Home Storage Basket Set",
+    description: "Premium storage baskets designed to organize and declutter different areas of your home.",
     category: "Home Organization",
     rating: "4.6",
     reviews: "623",
@@ -50,6 +53,7 @@ export const products = [
   {
     id: 4,
     name: "Smart Home Cleaning Gadget",
+    description: "A smart and convenient cleaning gadget designed to make everyday home cleaning easier.",
     category: "Cleaning & Laundry",
     rating: "4.5",
     reviews: "517",
@@ -62,6 +66,7 @@ export const products = [
   {
     id: 5,
     name: "Minimalist Bedroom Organizer",
+    description: "A minimalist organizer that keeps your bedroom essentials tidy while maintaining a clean look.",
     category: "Bedroom & Bathroom",
     rating: "4.8",
     reviews: "941",
@@ -74,6 +79,7 @@ export const products = [
   {
     id: 6,
     name: "Compact Smart Home Device",
+    description: "A compact smart home device designed to add convenience and modern functionality to your home.",
     category: "Smart Home & Gadgets",
     rating: "4.6",
     reviews: "733",
