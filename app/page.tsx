@@ -24,7 +24,7 @@ import {
 
 import { categories, products } from "@/data/products";
 
-const WHATSAPP_NUMBER = "923XXXXXXXXX";
+const WHATSAPP_NUMBER = "923252466277";
 
 const whatsappMessage = encodeURIComponent(
   "Hello ZishiBuys, I want to place a special custom order."
