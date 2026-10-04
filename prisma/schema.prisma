@@ -1,49 +1,35 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+generator client {
+  provider = "prisma-client-js"
+}
 
-export async function GET(
-  request: Request,
-  { params }: { params: { slug: string } }
-) {
-  try {
-    const category = await prisma.category.findUnique({
-      where: {
-        slug: params.slug,
-      },
-      include: {
-        products: {
-          where: {
-            published: true,
-          },
-          orderBy: [
-            { sortOrder: "asc" },
-            { createdAt: "desc" },
-          ],
-        },
-      },
-    });
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
-    if (!category) {
-      return NextResponse.json(
-        { error: "Category not found" },
-        { status: 404 }
-      );
-    }
+model Category {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
-    return NextResponse.json({
-      category: {
-        id: category.id,
-        name: category.name,
-        slug: category.slug,
-      },
-      products: category.products,
-    });
-  } catch (error) {
-    console.error("Products fetch error:", error);
+  products  Product[]
+}
 
-    return NextResponse.json(
-      { error: "Failed to fetch products" },
-      { status: 500 }
-    );
-  }
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  price       Float?
+  image       String?
+  category    String?
+  published   Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  categoryRef Category? @relation(fields: [categoryId], references: [id])
+  categoryId  String?
 }
