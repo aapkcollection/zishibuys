@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  seoTitle    String?
+  seoDesc     String?
+  products    Product[]
+  articles    Article[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id             String   @id @default(cuid())
+  name           String
+  slug           String   @unique
+  description    String?
+  price          String?
+  imageUrl       String?
+  videoUrl       String?
+  amazonUrl      String
+  affiliateTag   String?
+  badge          String?
+  rating         Float?
+  reviewCount    Int?
+  seoTitle       String?
+  seoDescription String?
+  altText        String?
+  published      Boolean  @default(false)
+  categoryId     String
+  category       Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Article {
+  id             String    @id @default(cuid())
+  title          String
+  slug           String    @unique
+  excerpt        String?
+  content        String
+  seoTitle       String?
+  seoDescription String?
+  published      Boolean   @default(false)
+  categoryId     String?
+  category       Category? @relation(fields: [categoryId], references:
