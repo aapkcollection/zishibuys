@@ -1,65 +1,49 @@
-generator client {
-  provider = "prisma-client-js"
-}
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
+export async function GET(
+  request: Request,
+  { params }: { params: { slug: string } }
+) {
+  try {
+    const category = await prisma.category.findUnique({
+      where: {
+        slug: params.slug,
+      },
+      include: {
+        products: {
+          where: {
+            published: true,
+          },
+          orderBy: [
+            { sortOrder: "asc" },
+            { createdAt: "desc" },
+          ],
+        },
+      },
+    });
 
-model Admin {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  name         String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-}
+    if (!category) {
+      return NextResponse.json(
+        { error: "Category not found" },
+        { status: 404 }
+      );
+    }
 
-model Category {
-  id          String    @id @default(cuid())
-  name        String
-  slug        String    @unique
-  description String?
-  seoTitle    String?
-  seoDesc     String?
-  products    Product[]
-  articles    Article[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-}
+    return NextResponse.json({
+      category: {
+        id: category.id,
+        name: category.name,
+        slug: category.slug,
+      },
+      products: category.products,
+    });
+  } catch (error) {
+    console.error("Products fetch error:", error);
 
-model Product {
-  id             String   @id @default(cuid())
-  name           String
-  slug           String   @unique
-  description    String?
-  price          String?
-  imageUrl       String?
-  videoUrl       String?
-  amazonUrl      String
-  affiliateTag   String?
-  badge          String?
-  rating         Float?
-  reviewCount    Int?
-  seoTitle       String?
-  seoDescription String?
-  altText        String?
-  published      Boolean  @default(false)
-  categoryId     String
-  category       Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+    return NextResponse.json(
+      { error: "Failed to fetch products" },
+      { status: 500 }
+    );
+  }
 }
-
-model Article {
-  id             String    @id @default(cuid())
-  title          String
-  slug           String    @unique
-  excerpt        String?
-  content        String
-  seoTitle       String?
-  seoDescription String?
-  published      Boolean   @default(false)
-  categoryId     String?
-  category       Category? @relation(fields: [categoryId], references:
