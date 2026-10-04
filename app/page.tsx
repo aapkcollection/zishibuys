@@ -17,15 +17,25 @@ import {
   Tag,
   Star,
   Grid3X3,
-  ArrowRight,
   ExternalLink,
+  MessageCircle,
+  Play,
 } from "lucide-react";
 
 import { categories, products } from "@/data/products";
 
+const WHATSAPP_NUMBER = "923XXXXXXXXX";
+
+const whatsappMessage = encodeURIComponent(
+  "Hello ZishiBuys, I want to place a special custom order."
+);
+
+const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMessage}`;
+
 export default function HomePage() {
   const [slide, setSlide] = useState(0);
   const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -38,8 +48,9 @@ export default function HomePage() {
   const currentCategory = categories[slide];
 
   const currentProduct =
-    products.find((product) => product.category === currentCategory.name) ||
-    products[0];
+    products.find(
+      (product) => product.category === currentCategory.name
+    ) || products[0];
 
   const nextSlide = () => {
     setSlide((current) => (current + 1) % categories.length);
@@ -51,13 +62,37 @@ export default function HomePage() {
     );
   };
 
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const normalizedSearch = search.trim().toLowerCase();
+
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch =
+      !normalizedSearch ||
+      product.name.toLowerCase().includes(normalizedSearch) ||
+      product.category.toLowerCase().includes(normalizedSearch);
+
+    const matchesCategory =
+      selectedCategory === "All" ||
+      product.category === selectedCategory;
+
+    return matchesSearch && matchesCategory;
+  });
+
+  const selectCategory = (categoryName: string, index?: number) => {
+    setSelectedCategory(categoryName);
+
+    if (typeof index === "number") {
+      setSlide(index);
+    }
+
+    setTimeout(() => {
+      document
+        .getElementById("products")
+        ?.scrollIntoView({ behavior: "smooth" });
+    }, 50);
+  };
 
   return (
     <main className="site">
-
       {/* TOP BAR */}
       <div className="topbar">
         <div>Welcome to ZishiBuys</div>
@@ -72,7 +107,6 @@ export default function HomePage() {
       {/* HEADER */}
       <header className="header">
         <div className="header-inner">
-
           <div className="logo">
             <div className="logo-box">Z</div>
 
@@ -80,6 +114,7 @@ export default function HomePage() {
               <div className="logo-name">
                 Zishi<span>Buys</span>
               </div>
+
               <div className="tagline">
                 Better products. Better prices.
               </div>
@@ -87,8 +122,7 @@ export default function HomePage() {
           </div>
 
           <div className="search-box">
-
-            <button className="category-select">
+            <button className="category-select" type="button">
               All Categories
               <ChevronDown size={15} />
             </button>
@@ -97,17 +131,24 @@ export default function HomePage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search products..."
+              aria-label="Search products"
             />
 
-            <button className="search-button">
+            <button
+              className="search-button"
+              type="button"
+              onClick={() =>
+                document
+                  .getElementById("products")
+                  ?.scrollIntoView({ behavior: "smooth" })
+              }
+            >
               <Search size={18} />
               Search
             </button>
-
           </div>
 
           <div className="header-actions">
-
             <div className="header-action">
               <User size={20} />
               <span>Account</span>
@@ -120,72 +161,82 @@ export default function HomePage() {
 
             <div className="header-action cart">
               <ShoppingCart size={21} />
-              <span>Cart</span>
-              <b>0</b>
+              <span>Amazon Orders</span>
             </div>
-
           </div>
-
         </div>
       </header>
 
       {/* NAVIGATION */}
       <nav className="navigation">
         <div className="navigation-inner">
-
-          <div className="all-category">
+          <button
+            className="all-category"
+            type="button"
+            onClick={() => selectCategory("All")}
+          >
             <Menu size={18} />
             All Categories
-          </div>
+          </button>
 
           <div className="nav-links">
-            <span>Electronics</span>
-            <span>Fashion</span>
-            <span>Home & Living</span>
-            <span>Beauty & Health</span>
-            <span>Sports</span>
-            <span>Toys</span>
-            <span>Automotive</span>
+            {categories.slice(0, 7).map((category, index) => (
+              <button
+                key={category.name}
+                type="button"
+                onClick={() => selectCategory(category.name, index)}
+              >
+                {category.name}
+              </button>
+            ))}
           </div>
 
-          <div className="flash-link">
+          <button
+            className="flash-link"
+            type="button"
+            onClick={() =>
+              document
+                .getElementById("deals")
+                ?.scrollIntoView({ behavior: "smooth" })
+            }
+          >
             <Flame size={17} />
             Flash Deals
-          </div>
-
+          </button>
         </div>
       </nav>
 
-      {/* MAIN */}
       <div className="container">
-
-        {/* HERO AREA */}
+        {/* HERO */}
         <section className="hero-layout">
-
-          {/* CATEGORY SIDEBAR */}
           <aside className="category-sidebar">
+            <div className="sidebar-title">SHOP CATEGORIES</div>
 
-            <div className="sidebar-title">
-              SHOP CATEGORIES
-            </div>
-
-            <div className="sidebar-all">
-              <Grid3X3 size={15} />
-              All Products
+            <button
+              className={
+                selectedCategory === "All"
+                  ? "sidebar-all selected"
+                  : "sidebar-all"
+              }
+              onClick={() => selectCategory("All")}
+              type="button"
+            >
+              <span>
+                <Grid3X3 size={15} /> All Products
+              </span>
               <ChevronRight size={15} />
-            </div>
+            </button>
 
-            {categories.map((category) => (
+            {categories.map((category, index) => (
               <button
                 key={category.name}
                 className={
-                  slide === categories.indexOf(category)
+                  slide === index
                     ? "sidebar-category active"
                     : "sidebar-category"
                 }
-                onClick={() =>
-                  setSlide(categories.indexOf(category))
-                }
+                onClick={() => selectCategory(category.name, index)}
+                type="button"
               >
                 <span>
                   {category.icon} {category.name}
@@ -195,19 +246,22 @@ export default function HomePage() {
               </button>
             ))}
 
-            <div className="view-products">
+            <button
+              className="view-products"
+              type="button"
+              onClick={() => selectCategory("All")}
+            >
               View all products →
-            </div>
-
+            </button>
           </aside>
 
           {/* SLIDER */}
           <section className="category-slider">
-
             <div className="slider-inner">
-
-              <div className="slider-info">
-
+              <div
+                className="slider-info"
+                key={`text-${currentProduct.id}`}
+              >
                 <div className="slider-category">
                   {currentCategory.icon} {currentCategory.name}
                 </div>
@@ -219,8 +273,8 @@ export default function HomePage() {
                 </h1>
 
                 <p>
-                  Discover useful products, trending gadgets
-                  and everyday essentials at amazing prices.
+                  Discover useful products, trending gadgets and everyday
+                  essentials at amazing prices.
                 </p>
 
                 <div className="slider-product-name">
@@ -230,9 +284,7 @@ export default function HomePage() {
                 <div className="slider-rating">
                   <Star size={15} fill="currentColor" />
                   {currentProduct.rating}
-                  <span>
-                    ({currentProduct.reviews})
-                  </span>
+                  <span>({currentProduct.reviews})</span>
                 </div>
 
                 <div className="slider-price">
@@ -240,11 +292,10 @@ export default function HomePage() {
                 </div>
 
                 <div className="slider-buttons">
-
                   <a
                     href={currentProduct.amazonUrl}
                     target="_blank"
-                    rel="noopener noreferrer"
+                    rel="sponsored noopener noreferrer"
                     className="order-now-button"
                   >
                     <span className="amazon-icon">a</span>
@@ -252,21 +303,28 @@ export default function HomePage() {
                     <ExternalLink size={15} />
                   </a>
 
-                  <button className="explore-button">
+                  <button
+                    className="explore-button"
+                    type="button"
+                    onClick={() =>
+                      selectCategory(
+                        currentProduct.category,
+                        categories.findIndex(
+                          (category) =>
+                            category.name === currentProduct.category
+                        )
+                      )
+                    }
+                  >
                     Explore Deals
                   </button>
-
                 </div>
-
               </div>
 
-              {/* PRODUCT IMAGE */}
-              <div className="slider-image-area">
-
+              <div className="slider-image-area" key={currentProduct.id}>
                 <img
-                  key={`${currentProduct.id}-${slide}`}
                   src={currentProduct.image}
-                  alt={currentProduct.name}
+                  alt={`${currentProduct.name} - ZishiBuys`}
                   className="slider-product-image"
                 />
 
@@ -276,13 +334,24 @@ export default function HomePage() {
                   <span>OFF</span>
                 </div>
 
+                {currentProduct.videoUrl && (
+                  <a
+                    href={currentProduct.videoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="video-badge"
+                  >
+                    <Play size={13} fill="currentColor" />
+                    Watch Video
+                  </a>
+                )}
               </div>
 
-              {/* ARROWS */}
               <button
                 className="slider-arrow left"
                 onClick={previousSlide}
-                aria-label="Previous"
+                aria-label="Previous product"
+                type="button"
               >
                 <ChevronLeft size={25} />
               </button>
@@ -290,12 +359,12 @@ export default function HomePage() {
               <button
                 className="slider-arrow right"
                 onClick={nextSlide}
-                aria-label="Next"
+                aria-label="Next product"
+                type="button"
               >
                 <ChevronRight size={25} />
               </button>
 
-              {/* DOTS */}
               <div className="slider-dots">
                 {categories.map((category, index) => (
                   <button
@@ -306,20 +375,17 @@ export default function HomePage() {
                         ? "slider-dot active"
                         : "slider-dot"
                     }
-                    aria-label={category.name}
+                    aria-label={`Show ${category.name}`}
+                    type="button"
                   />
                 ))}
               </div>
-
             </div>
-
           </section>
-
         </section>
 
         {/* BENEFITS */}
         <section className="benefits">
-
           <div className="benefit">
             <Truck />
             <div>
@@ -340,31 +406,50 @@ export default function HomePage() {
             <Headphones />
             <div>
               <strong>24/7 Support</strong>
-              <small>We're here to help</small>
+              <small>We&apos;re here to help</small>
             </div>
           </div>
+        </section>
 
+        {/* CUSTOM ORDERS */}
+        <section className="custom-orders">
+          <div className="custom-orders-icon">
+            <MessageCircle size={30} />
+          </div>
+
+          <div className="custom-orders-content">
+            <span>SPECIAL CUSTOM ORDERS</span>
+            <h2>Can&apos;t find what you&apos;re looking for?</h2>
+            <p>
+              Send us your product request on WhatsApp and our team will
+              help you find it.
+            </p>
+          </div>
+
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="whatsapp-order-button"
+          >
+            <MessageCircle size={20} />
+            WhatsApp Us
+          </a>
         </section>
 
         {/* FLASH DEALS */}
-        <section className="flash-deals">
-
+        <section className="flash-deals" id="deals">
           <div className="flash-heading">
-
-            <div className="limited">
-              🔥 LIMITED TIME
-            </div>
+            <div className="limited">🔥 LIMITED TIME</div>
 
             <h2>Flash Deals</h2>
 
             <p>
               Grab today&apos;s hottest deals before they&apos;re gone.
             </p>
-
           </div>
 
           <div className="flash-items">
-
             <div>
               <Flame />
               <strong>HOT DEALS</strong>
@@ -380,22 +465,26 @@ export default function HomePage() {
             <div>
               <ShieldCheck />
               <strong>EASY PAYMENT</strong>
-              <small>Safe & secure checkout</small>
+              <small>Safe &amp; secure checkout</small>
             </div>
-
           </div>
 
-          <a className="view-deals">
+          <button
+            className="view-deals"
+            type="button"
+            onClick={() =>
+              document
+                .getElementById("products")
+                ?.scrollIntoView({ behavior: "smooth" })
+            }
+          >
             View All Deals →
-          </a>
-
+          </button>
         </section>
 
         {/* PRODUCTS */}
-        <section className="products-section">
-
+        <section className="products-section" id="products">
           <div className="section-heading">
-
             <div>
               <div className="trending">
                 <Tag size={15} />
@@ -409,92 +498,125 @@ export default function HomePage() {
               </p>
             </div>
 
-            <strong>
-              {filteredProducts.length} products
-            </strong>
-
+            <strong>{filteredProducts.length} products</strong>
           </div>
 
-          <div className="products-grid">
+          {filteredProducts.length === 0 ? (
+            <div className="no-products">
+              <Search size={30} />
+              <h3>No products found</h3>
+              <p>Try another product name or category.</p>
 
-            {filteredProducts.map((product) => (
-
-              <article
-                className="product-card"
-                key={product.id}
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch("");
+                  setSelectedCategory("All");
+                }}
               >
-
-                <div className="product-image-wrapper">
-
-                  <span className="product-badge">
-                    {product.badge}
-                  </span>
-
-                  <button className="heart-button">
-                    <Heart size={17} />
-                  </button>
-
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                  />
-
-                </div>
-
-                <div className="product-content">
-
-                  <div className="product-category">
-                    {product.category}
-                  </div>
-
-                  <h3>{product.name}</h3>
-
-                  <div className="product-rating">
-                    <Star
-                      size={14}
-                      fill="currentColor"
-                    />
-                    <b>{product.rating}</b>
-                    <span>({product.reviews})</span>
-                  </div>
-
-                  <div className="product-price">
-                    {product.price}
-                  </div>
-
-                  <div className="shipping">
-                    FREE SHIPPING
-                  </div>
-
-                  {/* AMAZON ORDER BUTTON */}
-                  <a
-                    href={product.amazonUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="amazon-order-button"
-                  >
-                    <span className="amazon-small-icon">
-                      a
+                Show All Products
+              </button>
+            </div>
+          ) : (
+            <div className="products-grid">
+              {filteredProducts.map((product) => (
+                <article
+                  className="product-card"
+                  key={product.id}
+                >
+                  <div className="product-image-wrapper">
+                    <span className="product-badge">
+                      {product.badge}
                     </span>
 
-                    <span>Order Now</span>
+                    <button
+                      className="heart-button"
+                      type="button"
+                      aria-label={`Add ${product.name} to wishlist`}
+                    >
+                      <Heart size={17} />
+                    </button>
 
-                    <ExternalLink size={14} />
-                  </a>
+                    <img
+                      src={product.image}
+                      alt={`${product.name} - ${product.category}`}
+                      loading="lazy"
+                    />
+                  </div>
 
-                </div>
+                  <div className="product-content">
+                    <div className="product-category">
+                      {product.category}
+                    </div>
 
-              </article>
+                    <h3>{product.name}</h3>
 
-            ))}
+                    <p className="product-description">
+                      {product.description}
+                    </p>
 
-          </div>
+                    <div className="product-rating">
+                      <Star
+                        size={14}
+                        fill="currentColor"
+                      />
+                      <b>{product.rating}</b>
+                      <span>({product.reviews})</span>
+                    </div>
 
+                    <div className="product-price">
+                      {product.price}
+                    </div>
+
+                    <div className="shipping">
+                      FREE SHIPPING
+                    </div>
+
+                    {product.videoUrl && (
+                      <a
+                        href={product.videoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="watch-video-button"
+                      >
+                        <Play size={14} fill="currentColor" />
+                        Watch Product Video
+                      </a>
+                    )}
+
+                    <a
+                      href={product.amazonUrl}
+                      target="_blank"
+                      rel="sponsored noopener noreferrer"
+                      className="amazon-order-button"
+                    >
+                      <span className="amazon-small-icon">
+                        a
+                      </span>
+
+                      <span>Order Now</span>
+
+                      <ExternalLink size={14} />
+                    </a>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* AFFILIATE NOTICE */}
+        <section className="affiliate-notice">
+          <strong>Amazon Affiliate Disclosure</strong>
+          <p>
+            ZishiBuys may earn a commission when you purchase through
+            qualifying Amazon affiliate links. Product prices and
+            availability are determined by Amazon.
+          </p>
         </section>
 
         {/* TRUST BAR */}
         <section className="trust-bar">
-
           <div>
             <ShieldCheck />
             <div>
@@ -526,41 +648,34 @@ export default function HomePage() {
               <small>We&apos;re here when you need us</small>
             </div>
           </div>
-
         </section>
-
       </div>
 
       {/* FOOTER */}
       <footer className="footer">
-
         <div className="footer-inner">
-
           <div className="footer-brand">
-
             <div className="footer-logo">
               <div className="logo-box">Z</div>
+
               <div className="logo-name">
                 Zishi<span>Buys</span>
               </div>
             </div>
 
-            <p>
-              Better products. Better prices.
-            </p>
+            <p>Better products. Better prices.</p>
 
             <small>
-              Discover useful products, trending gadgets
-              and everyday essentials at great prices.
+              Discover useful products, trending gadgets and everyday
+              essentials at great prices.
             </small>
-
           </div>
 
           <div className="footer-column">
             <h4>Customer Service</h4>
             <span>Help Center</span>
             <span>Shipping Information</span>
-            <span>Returns & Refunds</span>
+            <span>Returns &amp; Refunds</span>
             <span>Contact Us</span>
           </div>
 
@@ -576,47 +691,73 @@ export default function HomePage() {
             <h4>About ZishiBuys</h4>
             <span>About Us</span>
             <span>Privacy Policy</span>
-            <span>Terms & Conditions</span>
+            <span>Terms &amp; Conditions</span>
           </div>
-
         </div>
 
         <div className="footer-bottom">
           © 2026 ZishiBuys. All rights reserved.
         </div>
-
       </footer>
+
+      {/* FLOATING WHATSAPP */}
+      <a
+        href={whatsappUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="whatsapp-floating"
+        aria-label="Special Custom Orders on WhatsApp"
+      >
+        <MessageCircle size={24} />
+        <span>Custom Order</span>
+      </a>
 
       {/* MOBILE NAV */}
       <div className="mobile-bottom-nav">
-
-        <div className="active">
+        <button
+          className="active"
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        >
           <Grid3X3 size={19} />
           <span>Home</span>
-        </div>
+        </button>
 
-        <div>
+        <button
+          type="button"
+          onClick={() =>
+            document
+              .getElementById("products")
+              ?.scrollIntoView({ behavior: "smooth" })
+          }
+        >
           <Menu size={19} />
-          <span>Categories</span>
-        </div>
+          <span>Products</span>
+        </button>
 
-        <div>
+        <button
+          type="button"
+          onClick={() => selectCategory("All")}
+        >
           <Heart size={19} />
           <span>Wishlist</span>
-        </div>
+        </button>
 
-        <div>
-          <ShoppingCart size={19} />
-          <span>Cart</span>
-        </div>
+        <button
+          type="button"
+          onClick={() =>
+            window.open(whatsappUrl, "_blank", "noopener,noreferrer")
+          }
+        >
+          <MessageCircle size={19} />
+          <span>WhatsApp</span>
+        </button>
 
-        <div>
+        <button type="button">
           <User size={19} />
           <span>Account</span>
-        </div>
-
+        </button>
       </div>
-
     </main>
   );
 }
