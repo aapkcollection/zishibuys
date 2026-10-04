@@ -1,4 +1,3 @@
-
 {
   "name": "zishibuys",
   "version": "1.0.0",
@@ -11,6 +10,7 @@
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",
+    "jose": "^6.1.0",
     "lucide-react": "^0.468.0",
     "next": "^15.5.4",
     "react": "^19.1.0",
