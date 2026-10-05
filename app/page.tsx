@@ -20,6 +20,7 @@ import {
   ExternalLink,
   MessageCircle,
   Play,
+  Image as ImageIcon,
 } from "lucide-react";
 
 import { categories, products } from "@/data/products";
@@ -52,13 +53,17 @@ export default function HomePage() {
       (product) => product.category === currentCategory.name
     ) || products[0];
 
+  const currentImage =
+    currentProduct.images?.[0] || "/placeholder-product.jpg";
+
   const nextSlide = () => {
     setSlide((current) => (current + 1) % categories.length);
   };
 
   const previousSlide = () => {
     setSlide(
-      (current) => (current - 1 + categories.length) % categories.length
+      (current) =>
+        (current - 1 + categories.length) % categories.length
     );
   };
 
@@ -68,7 +73,8 @@ export default function HomePage() {
     const matchesSearch =
       !normalizedSearch ||
       product.name.toLowerCase().includes(normalizedSearch) ||
-      product.category.toLowerCase().includes(normalizedSearch);
+      product.category.toLowerCase().includes(normalizedSearch) ||
+      product.description.toLowerCase().includes(normalizedSearch);
 
     const matchesCategory =
       selectedCategory === "All" ||
@@ -77,7 +83,10 @@ export default function HomePage() {
     return matchesSearch && matchesCategory;
   });
 
-  const selectCategory = (categoryName: string, index?: number) => {
+  const selectCategory = (
+    categoryName: string,
+    index?: number
+  ) => {
     setSelectedCategory(categoryName);
 
     if (typeof index === "number") {
@@ -122,7 +131,11 @@ export default function HomePage() {
           </div>
 
           <div className="search-box">
-            <button className="category-select" type="button">
+            <button
+              className="category-select"
+              type="button"
+              onClick={() => selectCategory("All")}
+            >
               All Categories
               <ChevronDown size={15} />
             </button>
@@ -184,7 +197,9 @@ export default function HomePage() {
               <button
                 key={category.name}
                 type="button"
-                onClick={() => selectCategory(category.name, index)}
+                onClick={() =>
+                  selectCategory(category.name, index)
+                }
               >
                 {category.name}
               </button>
@@ -210,7 +225,9 @@ export default function HomePage() {
         {/* HERO */}
         <section className="hero-layout">
           <aside className="category-sidebar">
-            <div className="sidebar-title">SHOP CATEGORIES</div>
+            <div className="sidebar-title">
+              SHOP CATEGORIES
+            </div>
 
             <button
               className={
@@ -222,8 +239,10 @@ export default function HomePage() {
               type="button"
             >
               <span>
-                <Grid3X3 size={15} /> All Products
+                <Grid3X3 size={15} />
+                All Products
               </span>
+
               <ChevronRight size={15} />
             </button>
 
@@ -235,7 +254,9 @@ export default function HomePage() {
                     ? "sidebar-category active"
                     : "sidebar-category"
                 }
-                onClick={() => selectCategory(category.name, index)}
+                onClick={() =>
+                  selectCategory(category.name, index)
+                }
                 type="button"
               >
                 <span>
@@ -263,7 +284,8 @@ export default function HomePage() {
                 key={`text-${currentProduct.id}`}
               >
                 <div className="slider-category">
-                  {currentCategory.icon} {currentCategory.name}
+                  {currentCategory.icon}{" "}
+                  {currentCategory.name}
                 </div>
 
                 <h1>
@@ -273,8 +295,8 @@ export default function HomePage() {
                 </h1>
 
                 <p>
-                  Discover useful products, trending gadgets and everyday
-                  essentials at amazing prices.
+                  Discover useful products, trending gadgets
+                  and everyday essentials at amazing prices.
                 </p>
 
                 <div className="slider-product-name">
@@ -283,8 +305,12 @@ export default function HomePage() {
 
                 <div className="slider-rating">
                   <Star size={15} fill="currentColor" />
+
                   {currentProduct.rating}
-                  <span>({currentProduct.reviews})</span>
+
+                  <span>
+                    ({currentProduct.reviews})
+                  </span>
                 </div>
 
                 <div className="slider-price">
@@ -298,8 +324,12 @@ export default function HomePage() {
                     rel="sponsored noopener noreferrer"
                     className="order-now-button"
                   >
-                    <span className="amazon-icon">a</span>
+                    <span className="amazon-icon">
+                      a
+                    </span>
+
                     <span>Order Now</span>
+
                     <ExternalLink size={15} />
                   </a>
 
@@ -311,7 +341,8 @@ export default function HomePage() {
                         currentProduct.category,
                         categories.findIndex(
                           (category) =>
-                            category.name === currentProduct.category
+                            category.name ===
+                            currentProduct.category
                         )
                       )
                     }
@@ -321,9 +352,13 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="slider-image-area" key={currentProduct.id}>
+              {/* SLIDER IMAGE */}
+              <div
+                className="slider-image-area"
+                key={`image-${currentProduct.id}`}
+              >
                 <img
-                  src={currentProduct.image}
+                  src={currentImage}
                   alt={`${currentProduct.name} - ZishiBuys`}
                   className="slider-product-image"
                 />
@@ -334,14 +369,24 @@ export default function HomePage() {
                   <span>OFF</span>
                 </div>
 
-                {currentProduct.videoUrl && (
+                {currentProduct.images.length > 1 && (
+                  <div className="image-count-badge">
+                    <ImageIcon size={13} />
+                    {currentProduct.images.length}
+                  </div>
+                )}
+
+                {currentProduct.videos.length > 0 && (
                   <a
-                    href={currentProduct.videoUrl}
+                    href={currentProduct.videos[0]}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="video-badge"
                   >
-                    <Play size={13} fill="currentColor" />
+                    <Play
+                      size={13}
+                      fill="currentColor"
+                    />
                     Watch Video
                   </a>
                 )}
@@ -388,6 +433,7 @@ export default function HomePage() {
         <section className="benefits">
           <div className="benefit">
             <Truck />
+
             <div>
               <strong>Free Shipping</strong>
               <small>Selected products</small>
@@ -396,6 +442,7 @@ export default function HomePage() {
 
           <div className="benefit">
             <ShieldCheck />
+
             <div>
               <strong>Buyer Protection</strong>
               <small>Shop with confidence</small>
@@ -404,9 +451,10 @@ export default function HomePage() {
 
           <div className="benefit">
             <Headphones />
+
             <div>
               <strong>24/7 Support</strong>
-              <small>We&apos;re here to help</small>
+              <small>We're here to help</small>
             </div>
           </div>
         </section>
@@ -419,10 +467,14 @@ export default function HomePage() {
 
           <div className="custom-orders-content">
             <span>SPECIAL CUSTOM ORDERS</span>
-            <h2>Can&apos;t find what you&apos;re looking for?</h2>
+
+            <h2>
+              Can't find what you're looking for?
+            </h2>
+
             <p>
-              Send us your product request on WhatsApp and our team will
-              help you find it.
+              Send us your product request on WhatsApp
+              and our team will help you find it.
             </p>
           </div>
 
@@ -440,12 +492,15 @@ export default function HomePage() {
         {/* FLASH DEALS */}
         <section className="flash-deals" id="deals">
           <div className="flash-heading">
-            <div className="limited">🔥 LIMITED TIME</div>
+            <div className="limited">
+              🔥 LIMITED TIME
+            </div>
 
             <h2>Flash Deals</h2>
 
             <p>
-              Grab today&apos;s hottest deals before they&apos;re gone.
+              Grab today's hottest deals before they're
+              gone.
             </p>
           </div>
 
@@ -475,7 +530,9 @@ export default function HomePage() {
             onClick={() =>
               document
                 .getElementById("products")
-                ?.scrollIntoView({ behavior: "smooth" })
+                ?.scrollIntoView({
+                  behavior: "smooth",
+                })
             }
           >
             View All Deals →
@@ -483,7 +540,10 @@ export default function HomePage() {
         </section>
 
         {/* PRODUCTS */}
-        <section className="products-section" id="products">
+        <section
+          className="products-section"
+          id="products"
+        >
           <div className="section-heading">
             <div>
               <div className="trending">
@@ -494,18 +554,25 @@ export default function HomePage() {
               <h2>Popular Products</h2>
 
               <p>
-                Popular picks our customers are loving right now.
+                Popular picks our customers are loving
+                right now.
               </p>
             </div>
 
-            <strong>{filteredProducts.length} products</strong>
+            <strong>
+              {filteredProducts.length} products
+            </strong>
           </div>
 
           {filteredProducts.length === 0 ? (
             <div className="no-products">
               <Search size={30} />
+
               <h3>No products found</h3>
-              <p>Try another product name or category.</p>
+
+              <p>
+                Try another product name or category.
+              </p>
 
               <button
                 type="button"
@@ -519,99 +586,138 @@ export default function HomePage() {
             </div>
           ) : (
             <div className="products-grid">
-              {filteredProducts.map((product) => (
-                <article
-                  className="product-card"
-                  key={product.id}
-                >
-                  <div className="product-image-wrapper">
-                    <span className="product-badge">
-                      {product.badge}
-                    </span>
+              {filteredProducts.map((product) => {
+                const productImage =
+                  product.images?.[0] ||
+                  "/placeholder-product.jpg";
 
-                    <button
-                      className="heart-button"
-                      type="button"
-                      aria-label={`Add ${product.name} to wishlist`}
-                    >
-                      <Heart size={17} />
-                    </button>
-
-                    <img
-                      src={product.image}
-                      alt={`${product.name} - ${product.category}`}
-                      loading="lazy"
-                    />
-                  </div>
-
-                  <div className="product-content">
-                    <div className="product-category">
-                      {product.category}
-                    </div>
-
-                    <h3>{product.name}</h3>
-
-                    <p className="product-description">
-                      {product.description}
-                    </p>
-
-                    <div className="product-rating">
-                      <Star
-                        size={14}
-                        fill="currentColor"
-                      />
-                      <b>{product.rating}</b>
-                      <span>({product.reviews})</span>
-                    </div>
-
-                    <div className="product-price">
-                      {product.price}
-                    </div>
-
-                    <div className="shipping">
-                      FREE SHIPPING
-                    </div>
-
-                    {product.videoUrl && (
-                      <a
-                        href={product.videoUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="watch-video-button"
-                      >
-                        <Play size={14} fill="currentColor" />
-                        Watch Product Video
-                      </a>
-                    )}
-
-                    <a
-                      href={product.amazonUrl}
-                      target="_blank"
-                      rel="sponsored noopener noreferrer"
-                      className="amazon-order-button"
-                    >
-                      <span className="amazon-small-icon">
-                        a
+                return (
+                  <article
+                    className="product-card"
+                    key={product.id}
+                  >
+                    <div className="product-image-wrapper">
+                      <span className="product-badge">
+                        {product.badge}
                       </span>
 
-                      <span>Order Now</span>
+                      <button
+                        className="heart-button"
+                        type="button"
+                        aria-label={`Add ${product.name} to wishlist`}
+                      >
+                        <Heart size={17} />
+                      </button>
 
-                      <ExternalLink size={14} />
-                    </a>
-                  </div>
-                </article>
-              ))}
+                      <img
+                        src={productImage}
+                        alt={`${product.name} - ${product.category}`}
+                        loading="lazy"
+                      />
+
+                      {/* IMAGE COUNT */}
+                      {product.images.length > 1 && (
+                        <div className="product-media-count">
+                          <ImageIcon size={13} />
+                          {product.images.length} Images
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="product-content">
+                      <div className="product-category">
+                        {product.category}
+                      </div>
+
+                      <h3>{product.name}</h3>
+
+                      <p className="product-description">
+                        {product.description}
+                      </p>
+
+                      <div className="product-rating">
+                        <Star
+                          size={14}
+                          fill="currentColor"
+                        />
+
+                        <b>{product.rating}</b>
+
+                        <span>
+                          ({product.reviews})
+                        </span>
+                      </div>
+
+                      <div className="product-price">
+                        {product.price}
+                      </div>
+
+                      <div className="shipping">
+                        FREE SHIPPING
+                      </div>
+
+                      {/* MULTIPLE VIDEOS */}
+                      {product.videos.length > 0 && (
+                        <div className="product-videos">
+                          {product.videos.map(
+                            (video, videoIndex) => (
+                              <a
+                                key={`${product.id}-video-${videoIndex}`}
+                                href={video}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="watch-video-button"
+                              >
+                                <Play
+                                  size={14}
+                                  fill="currentColor"
+                                />
+
+                                {product.videos.length >
+                                1
+                                  ? `Watch Video ${
+                                      videoIndex + 1
+                                    }`
+                                  : "Watch Product Video"}
+                              </a>
+                            )
+                          )}
+                        </div>
+                      )}
+
+                      <a
+                        href={product.amazonUrl}
+                        target="_blank"
+                        rel="sponsored noopener noreferrer"
+                        className="amazon-order-button"
+                      >
+                        <span className="amazon-small-icon">
+                          a
+                        </span>
+
+                        <span>Order Now</span>
+
+                        <ExternalLink size={14} />
+                      </a>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           )}
         </section>
 
         {/* AFFILIATE NOTICE */}
         <section className="affiliate-notice">
-          <strong>Amazon Affiliate Disclosure</strong>
+          <strong>
+            Amazon Affiliate Disclosure
+          </strong>
+
           <p>
-            ZishiBuys may earn a commission when you purchase through
-            qualifying Amazon affiliate links. Product prices and
-            availability are determined by Amazon.
+            ZishiBuys may earn a commission when you
+            purchase through qualifying Amazon affiliate
+            links. Product prices and availability are
+            determined by Amazon.
           </p>
         </section>
 
@@ -619,33 +725,45 @@ export default function HomePage() {
         <section className="trust-bar">
           <div>
             <ShieldCheck />
+
             <div>
               <strong>Secure Shopping</strong>
-              <small>Your information is protected</small>
+              <small>
+                Your information is protected
+              </small>
             </div>
           </div>
 
           <div>
             <Truck />
+
             <div>
               <strong>Fast Delivery</strong>
-              <small>Reliable shipping options</small>
+              <small>
+                Reliable shipping options
+              </small>
             </div>
           </div>
 
           <div>
             <Tag />
+
             <div>
               <strong>Great Prices</strong>
-              <small>Deals you&apos;ll love</small>
+              <small>
+                Deals you'll love
+              </small>
             </div>
           </div>
 
           <div>
             <Headphones />
+
             <div>
               <strong>Customer Support</strong>
-              <small>We&apos;re here when you need us</small>
+              <small>
+                We're here when you need us
+              </small>
             </div>
           </div>
         </section>
@@ -663,11 +781,13 @@ export default function HomePage() {
               </div>
             </div>
 
-            <p>Better products. Better prices.</p>
+            <p>
+              Better products. Better prices.
+            </p>
 
             <small>
-              Discover useful products, trending gadgets and everyday
-              essentials at great prices.
+              Discover useful products, trending gadgets
+              and everyday essentials at great prices.
             </small>
           </div>
 
@@ -717,7 +837,12 @@ export default function HomePage() {
         <button
           className="active"
           type="button"
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          onClick={() =>
+            window.scrollTo({
+              top: 0,
+              behavior: "smooth",
+            })
+          }
         >
           <Grid3X3 size={19} />
           <span>Home</span>
@@ -728,7 +853,9 @@ export default function HomePage() {
           onClick={() =>
             document
               .getElementById("products")
-              ?.scrollIntoView({ behavior: "smooth" })
+              ?.scrollIntoView({
+                behavior: "smooth",
+              })
           }
         >
           <Menu size={19} />
@@ -746,7 +873,11 @@ export default function HomePage() {
         <button
           type="button"
           onClick={() =>
-            window.open(whatsappUrl, "_blank", "noopener,noreferrer")
+            window.open(
+              whatsappUrl,
+              "_blank",
+              "noopener,noreferrer"
+            )
           }
         >
           <MessageCircle size={19} />
