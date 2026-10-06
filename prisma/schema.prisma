@@ -7,14 +7,74 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Category {
-  id        String    @id @default(cuid())
-  name      String
-  slug      String    @unique
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
+  EDITOR
+}
 
-  products  Product[]
+enum AnalyticsEventType {
+  PAGE_VIEW
+  PRODUCT_VIEW
+  AMAZON_CLICK
+  WHATSAPP_CLICK
+  SEARCH
+  WISHLIST_ADD
+  WISHLIST_REMOVE
+  SOCIAL_CLICK
+}
+
+enum SocialPlatform {
+  YOUTUBE
+  TIKTOK
+  INSTAGRAM
+  FACEBOOK
+  LINKEDIN
+}
+
+enum VideoJobStatus {
+  DRAFT
+  GENERATING
+  READY
+  APPROVED
+  PUBLISHING
+  PUBLISHED
+  FAILED
+}
+
+model Admin {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         AdminRole @default(ADMIN)
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  socialAccounts SocialAccount[]
+  videoJobs      SocialVideoJob[]
+  auditLogs      AuditLog[]
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  icon        String?
+  image       String?
+  published   Boolean  @default(true)
+  sortOrder   Int      @default(0)
+
+  seoTitle       String?
+  seoDescription String?
+  seoKeywords   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
 }
 
 model Product {
@@ -22,14 +82,289 @@ model Product {
   name        String
   slug        String   @unique
   description String?
-  price       Float?
-  image       String?
-  category    String?
-  published   Boolean  @default(true)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 
-  categoryRef Category? @relation(fields: [categoryId], references: [id])
-  categoryId  String?
+  price    Float?
+  currency String @default("USD")
+
+  rating  String?
+  reviews String?
+  badge   String?
+
+  amazonUrl String?
+
+  published Boolean @default(true)
+  sortOrder Int     @default(0)
+
+  seoTitle       String?
+  seoDescription String?
+  seoKeywords   String?
+  canonicalUrl   String?
+  noIndex        Boolean @default(false)
+
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  images ProductImage[]
+  videos ProductVideo[]
+  faqs   ProductFAQ[]
+
+  wishlistItems WishlistItem[]
+  analytics     AnalyticsEvent[]
+  videoJobs     SocialVideoJob[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([published])
+  @@index([createdAt])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  url       String
+  alt       String?
+  sortOrder Int     @default(0)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+}
+
+model ProductVideo {
+  id        String  @id @default(cuid())
+  productId String
+  url       String
+  title     String?
+  sortOrder Int     @default(0)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+}
+
+model ProductFAQ {
+  id        String @id @default(cuid())
+  productId String
+  question  String
+  answer    String
+  sortOrder Int    @default(0)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model User {
+  id             String    @id @default(cuid())
+  username       String?
+  mobile         String    @unique
+  mobileVerified Boolean   @default(false)
+
+  city    String?
+  country String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  wishlistItems WishlistItem[]
+  otpCodes      OTPCode[]
+  analytics     AnalyticsEvent[]
+}
+
+model OTPCode {
+  id        String   @id @default(cuid())
+  userId    String
+  codeHash  String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([productId])
+}
+
+model AnalyticsEvent {
+  id        String              @id @default(cuid())
+  type      AnalyticsEventType
+  sessionId String?
+  userId    String?
+  productId String?
+
+  path       String?
+  searchTerm String?
+  referrer   String?
+
+  country String?
+  city    String?
+
+  device String?
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([type])
+  @@index([createdAt])
+  @@index([productId])
+  @@index([userId])
+}
+
+model SEOPage {
+  id             String   @id @default(cuid())
+  path           String   @unique
+  title          String?
+  description    String?
+  keywords       String?
+  canonicalUrl   String?
+  noIndex        Boolean  @default(false)
+  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now())
+}
+
+model Article {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  excerpt     String?
+  content     String
+
+  seoTitle       String?
+  seoDescription String?
+  seoKeywords   String?
+
+  published Boolean  @default(false)
+  publishedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([published])
+}
+
+model Backlink {
+  id        String   @id @default(cuid())
+  url       String
+  domain    String?
+  anchor    String?
+  status    String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([domain])
+}
+
+model Redirect {
+  id        String   @id @default(cuid())
+  fromPath  String   @unique
+  toPath    String
+  status    Int      @default(301)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SocialAccount {
+  id String @id @default(cuid())
+
+  platform SocialPlatform
+  accountName String?
+  accountId   String?
+
+  accessToken  String?
+  refreshToken String?
+  tokenExpiresAt DateTime?
+
+  connected Boolean @default(false)
+  active    Boolean @default(true)
+
+  adminId String
+  admin   Admin @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  videoJobs SocialVideoJob[]
+
+  @@unique([platform, accountId])
+  @@index([platform])
+  @@index([adminId])
+}
+
+model SocialVideoJob {
+  id String @id @default(cuid())
+
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  createdById String?
+  createdBy   Admin? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  accountId String?
+  account   SocialAccount? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+
+  title       String?
+  description String?
+  caption     String?
+  hashtags    String?
+
+  sourceVideoUrl String?
+  thumbnailUrl   String?
+
+  platform SocialPlatform
+  status   VideoJobStatus @default(DRAFT)
+
+  publishedUrl String?
+  errorMessage String?
+
+  scheduledAt DateTime?
+  publishedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([platform])
+  @@index([status])
+  @@index([productId])
+  @@index([createdById])
+}
+
+model AuditLog {
+  id       String @id @default(cuid())
+  adminId  String?
+  action   String
+  entity   String?
+  entityId String?
+  details  Json?
+
+  createdAt DateTime @default(now())
+
+  admin Admin? @relation(fields: [adminId], references: [id], onDelete: SetNull)
+
+  @@index([adminId])
+  @@index([createdAt])
 }
