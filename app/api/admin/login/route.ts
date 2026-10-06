@@ -2,14 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { createSession } from "@/lib/auth";
-import crypto from "crypto";
-
-function hashPassword(password: string) {
-  return crypto
-    .createHash("sha256")
-    .update(password)
-    .digest("hex");
-}
+import { verifyPassword } from "@/lib/password";
 
 export async function POST(request: Request) {
   try {
@@ -49,9 +42,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const passwordHash = hashPassword(password);
+    const validPassword = await verifyPassword(
+      password,
+      admin.passwordHash
+    );
 
-    if (passwordHash !== admin.passwordHash) {
+    if (!validPassword) {
       return NextResponse.json(
         {
           success: false,
