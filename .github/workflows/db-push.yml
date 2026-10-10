@@ -1,13 +1,12 @@
 
 name: Initialize Database
 
-on:
-  workflow_dispatch:
+on: 
+  workflow_dispatch: {}
 
 jobs:
   push-schema:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -25,4 +24,3 @@ jobs:
         run: npx prisma db push
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
