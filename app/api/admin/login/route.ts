@@ -1,12 +1,24 @@
+
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { createSession } from "@/lib/auth";
 import { verifyPassword } from "@/lib/password";
 
+export const runtime = "nodejs";
+
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    let body: { email?: unknown; password?: unknown };
+
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, message: "Invalid request body." },
+        { status: 400 }
+      );
+    }
 
     const email =
       typeof body.email === "string"
@@ -14,9 +26,7 @@ export async function POST(request: Request) {
         : "";
 
     const password =
-      typeof body.password === "string"
-        ? body.password
-        : "";
+      typeof body.password === "string" ? body.password : "";
 
     if (!email || !password) {
       return NextResponse.json(
@@ -58,7 +68,6 @@ export async function POST(request: Request) {
     }
 
     const token = await createSession(admin.id);
-
     const cookieStore = await cookies();
 
     cookieStore.set("zishi_admin_session", token, {
@@ -83,10 +92,7 @@ export async function POST(request: Request) {
     console.error("Admin login error:", error);
 
     return NextResponse.json(
-      {
-        success: false,
-        message: "Something went wrong.",
-      },
+      { success: false, message: "Unable to complete login." },
       { status: 500 }
     );
   }
