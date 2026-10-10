@@ -1,7 +1,7 @@
 
 "use client";
 
-import { FormEvent, useState } from "react";
+import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -22,7 +22,10 @@ export default function AdminLoginPage() {
       const response = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password }),
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+        }),
       });
 
       const result = await response.json();
@@ -95,9 +98,11 @@ export default function AdminLoginPage() {
       <style jsx>{`
         .login-background {
           min-height: 100vh;
+          min-height: 100dvh;
           display: flex;
           align-items: center;
           justify-content: center;
+          box-sizing: border-box;
           padding: 24px;
           background:
             radial-gradient(
@@ -114,10 +119,10 @@ export default function AdminLoginPage() {
           max-width: 410px;
           box-sizing: border-box;
           padding: 36px 32px 24px;
-          background: #ffffff;
+          background: #fff;
           border: 1px solid rgba(245, 120, 74, 0.12);
           border-radius: 22px;
-          box-shadow: 0 18px 55px rgba(110, 62, 49, 0.10);
+          box-shadow: 0 18px 55px rgba(110, 62, 49, 0.1);
         }
 
         .brand-logo {
@@ -129,7 +134,7 @@ export default function AdminLoginPage() {
           margin: 0 auto 18px;
           border-radius: 17px;
           background: linear-gradient(135deg, #ff9b45, #f15a29);
-          color: white;
+          color: #fff;
           font-size: 32px;
           font-weight: 800;
           box-shadow: 0 8px 18px rgba(241, 90, 41, 0.22);
@@ -199,7 +204,7 @@ export default function AdminLoginPage() {
 
         button {
           width: 100%;
-          height: 49px;
+          min-height: 49px;
           border: none;
           border-radius: 11px;
           background: linear-gradient(100deg, #ff9847, #f15b2a);
