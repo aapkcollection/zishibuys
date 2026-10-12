@@ -8,14 +8,18 @@ export default function ProductsPage() {
         padding: "24px",
         background: "#f8fafc",
         fontFamily: "Arial, sans-serif",
+        color: "#111827",
       }}
     >
       <div style={{ maxWidth: "900px", margin: "0 auto" }}>
-        <Link href="/admin">← Back to Dashboard</Link>
+        <Link
+          href="/admin"
+          style={{ color: "#ea580c", textDecoration: "none" }}
+        >
+          ← Back to Dashboard
+        </Link>
 
-        <h1 style={{ color: "#111827" }}>
-          Products Management
-        </h1>
+        <h1>Products Management</h1>
 
         <p style={{ color: "#4b5563" }}>
           Manage your ZishiBuys store products.
@@ -23,7 +27,7 @@ export default function ProductsPage() {
 
         <section
           style={{
-            background: "#fff",
+            background: "#ffffff",
             padding: "24px",
             borderRadius: "12px",
             border: "1px solid #e5e7eb",
@@ -31,14 +35,14 @@ export default function ProductsPage() {
           }}
         >
           <h2>Your Products</h2>
+
           <p>
-            Your product management area is ready
-            for the next integration step.
+            Your product management page is ready for integration.
           </p>
+
           <p>
-            Next, we will connect products to your
-            database and add product creation,
-            editing, and Amazon affiliate links.
+            The next step is connecting the product database,
+            product creation and editing, and affiliate links.
           </p>
         </section>
       </div>
