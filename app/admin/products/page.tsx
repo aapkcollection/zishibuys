@@ -9,11 +9,11 @@ type Product = {
   title?: string;
   brand?: string;
   imageUrl?: string;
-  images?: string[];
+  images?: { url: string }[];
   price?: string;
   currency?: string;
   description?: string;
-  affiliateUrl: string;
+  affiliateUrl?: string;
   amazonUrl?: string;
 };
 
@@ -31,13 +31,14 @@ async function readResponse(response: Response) {
     throw new Error(
       response.status === 404
         ? "API route nahi mili (404). Deployment aur API file path check karo."
-        : `Server ne JSON ki jagah HTML/text bheja (HTTP ${response.status}). Vercel deployment aur API route check karo.`
+        : `Server response samajh nahi aaya (HTTP ${response.status}).`
     );
   }
 }
 
 export default function ProductsPage() {
   const [url, setUrl] = useState("");
+  const [affiliateUrl, setAffiliateUrl] = useState("");
   const [product, setProduct] = useState<Product | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryId, setCategoryId] = useState("");
@@ -67,6 +68,9 @@ export default function ProductsPage() {
 
         if (active && Array.isArray(list)) {
           setCategories(list);
+          if (list.length === 0) {
+            setMessage("Abhi koi category available nahi hai.");
+          }
         }
       } catch (error) {
         if (active) {
@@ -108,16 +112,21 @@ export default function ProductsPage() {
 
       if (!response.ok) {
         throw new Error(
-          data.error || data.message || `Product fetch fail hui (HTTP ${response.status}).`
+          data.error ||
+            data.message ||
+            `Product fetch fail hui (HTTP ${response.status}).`
         );
       }
 
       if (!data.product) {
-        throw new Error("API response mein product details nahi milin.");
+        throw new Error("Product details response mein nahi milin.");
       }
 
       setProduct(data.product);
-      setMessage(data.message || "Product details mil gayi hain.");
+      setAffiliateUrl("");
+      setMessage(
+        data.message || "Details mil gayi hain. Apna affiliate link add karo."
+      );
     } catch (error) {
       setMessage(
         error instanceof Error
@@ -137,6 +146,49 @@ export default function ProductsPage() {
       return;
     }
 
+    if (!affiliateUrl.trim()) {
+      setMessage("Apna Amazon affiliate link paste karo.");
+      return;
+    }
+
+    let affiliate: URL;
+
+    try {
+      affiliate = new URL(affiliateUrl.trim());
+    } catch {
+      setMessage("Affiliate link valid URL nahi hai.");
+      return;
+    }
+
+    const host = affiliate.hostname.toLowerCase();
+    const isAmazonHost =
+      host === "amzn.to" ||
+      host === "amazon.com" ||
+      host.endsWith(".amazon.com") ||
+      host === "amazon.co.uk" ||
+      host.endsWith(".amazon.co.uk") ||
+      host === "amazon.ca" ||
+      host.endsWith(".amazon.ca") ||
+      host === "amazon.com.au" ||
+      host.endsWith(".amazon.com.au") ||
+      host === "amazon.de" ||
+      host.endsWith(".amazon.de") ||
+      host === "amazon.fr" ||
+      host.endsWith(".amazon.fr") ||
+      host === "amazon.it" ||
+      host.endsWith(".amazon.it") ||
+      host === "amazon.es" ||
+      host.endsWith(".amazon.es") ||
+      host === "amazon.co.jp" ||
+      host.endsWith(".amazon.co.jp") ||
+      host === "amazon.in" ||
+      host.endsWith(".amazon.in");
+
+    if (affiliate.protocol !== "https:" || !isAmazonHost) {
+      setMessage("HTTPS Amazon affiliate link use karo.");
+      return;
+    }
+
     setSaving(true);
     setMessage("");
 
@@ -147,10 +199,10 @@ export default function ProductsPage() {
         body: JSON.stringify({
           name: product.title || `Amazon Product ${product.asin}`,
           description: product.description || "",
-          amazonUrl: product.amazonUrl || product.affiliateUrl,
-          affiliateUrl: product.affiliateUrl,
-          imageUrl: product.imageUrl,
-          price: product.price,
+          amazonUrl: product.amazonUrl || url.trim(),
+          affiliateUrl: affiliate.href,
+          imageUrl: product.imageUrl || "",
+          price: product.price || "",
           currency: product.currency || "USD",
           asin: product.asin,
           categoryId,
@@ -162,13 +214,16 @@ export default function ProductsPage() {
 
       if (!response.ok) {
         throw new Error(
-          data.message || data.error || `Product save fail hui (HTTP ${response.status}).`
+          data.message ||
+            data.error ||
+            `Product save fail hui (HTTP ${response.status}).`
         );
       }
 
-      setMessage(data.message || "Product database mein save ho gaya!");
+      setMessage(data.message || "Product successfully save ho gaya!");
       setProduct(null);
       setUrl("");
+      setAffiliateUrl("");
       setCategoryId("");
     } catch (error) {
       setMessage(
@@ -190,6 +245,7 @@ export default function ProductsPage() {
       boxSizing: "border-box" as const,
       border: "1px solid #ccc",
       borderRadius: 8,
+      fontSize: 15,
     },
     button: {
       padding: "12px 18px",
@@ -213,8 +269,11 @@ export default function ProductsPage() {
     >
       <Link href="/admin">← Back to Dashboard</Link>
 
-      <h1>Amazon Product Import</h1>
-      <p>Amazon.com product link paste karo aur details fetch karo.</p>
+      <h1>Add Amazon Product</h1>
+      <p>
+        Product link fetch karo, category select karo aur apna affiliate
+        button link add karke save karo.
+      </p>
 
       <label htmlFor="amazon-url">Amazon Product URL</label>
       <input
@@ -229,7 +288,10 @@ export default function ProductsPage() {
       <button
         onClick={fetchProduct}
         disabled={loading}
-        style={styles.button}
+        style={{
+          ...styles.button,
+          opacity: loading ? 0.6 : 1,
+        }}
       >
         {loading ? "Fetching..." : "Fetch Product"}
       </button>
@@ -269,7 +331,9 @@ export default function ProductsPage() {
           {product.brand && <p>Brand: {product.brand}</p>}
 
           {product.price && (
-            <p>Price: {product.currency || "USD"} {product.price}</p>
+            <p>
+              Price: {product.currency || "USD"} {product.price}
+            </p>
           )}
 
           <p>ASIN: {product.asin}</p>
@@ -280,22 +344,11 @@ export default function ProductsPage() {
             </p>
           )}
 
-          {Array.isArray(product.images) &&
-            product.images.length > 1 && (
-              <p>{product.images.length} product images available.</p>
-            )}
+          <hr style={{ margin: "24px 0" }} />
 
-          <p>
-            <a
-              href={product.affiliateUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Check Price on Amazon
-            </a>
-          </p>
-
-          <label htmlFor="category">Apni existing category select karo</label>
+          <label htmlFor="category">
+            Product kis category mein list karna hai?
+          </label>
           <select
             id="category"
             value={categoryId}
@@ -312,10 +365,26 @@ export default function ProductsPage() {
 
           {categories.length === 0 && (
             <p>
-              Categories load nahi hui hain. Category API ka route check
-              karna hoga; abhi product save mat karo.
+              Categories load nahi hui. Category API check karni hogi.
             </p>
           )}
+
+          <label htmlFor="affiliate-url">
+            Your Amazon Affiliate Link
+          </label>
+          <input
+            id="affiliate-url"
+            type="url"
+            value={affiliateUrl}
+            onChange={(event) => setAffiliateUrl(event.target.value)}
+            placeholder="https://www.amazon.com/dp/ASIN?tag=yourtag-20"
+            style={styles.input}
+          />
+
+          <p style={{ fontSize: 13, color: "#666" }}>
+            Website ka “Check Price on Amazon” button isi link ko use
+            karega.
+          </p>
 
           <button
             onClick={saveProduct}
@@ -324,6 +393,10 @@ export default function ProductsPage() {
               ...styles.button,
               background: "#16a34a",
               color: "#fff",
+              opacity:
+                saving || categories.length === 0 || !categoryId
+                  ? 0.6
+                  : 1,
               cursor:
                 saving || categories.length === 0 || !categoryId
                   ? "not-allowed"
